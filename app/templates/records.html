@@ -18,7 +18,7 @@
     <thead>
       <tr>
         <th>#</th><th>现场照片</th><th>纬度</th><th>经度</th>
-        <th>备注</th><th>采集时间</th><th>入库时间</th>
+        <th>备注</th><th>采集时间</th><th>入库时间</th><th>操作</th>
       </tr>
     </thead>
     <tbody>
@@ -26,15 +26,26 @@
       <tr>
         <td>{{ r["id"] }}</td>
         <td>
+          {% if r["photo_state"] == "ok" %}
           <a href="/photos/{{ r['photo'] }}" target="_blank">
             <img src="/photos/{{ r['photo'] }}" alt="倒木照片" class="thumb">
           </a>
+          {% elif r["photo_state"] == "pending_cleanup" %}
+          <span class="photo-removed pending-cleanup">🧹 已撤照<br>待清理</span>
+          {% else %}
+          <span class="photo-removed">🚫 已撤照</span>
+          {% endif %}
         </td>
         <td>{{ "%.6f"|format(r["lat"]) }}</td>
         <td>{{ "%.6f"|format(r["lng"]) }}</td>
         <td>{{ r["note"] }}</td>
         <td>{{ r["created_at"][:19].replace("T", " ") }}</td>
         <td>{{ r["uploaded_at"][:19].replace("T", " ") }}</td>
+        <td>
+          {% if r["photo_state"] == "ok" %}
+          <button type="button" class="btn-takedown" data-id="{{ r['id'] }}">撤照</button>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -44,5 +55,34 @@
   {% endif %}
   <p class="footer-link"><a href="/">← 返回采集页</a></p>
 </main>
+
+<script>
+// 撤照入口：选一笔已入库原照，确认后撤下所有字节相同的已入库副本
+document.querySelectorAll(".btn-takedown").forEach(function (btn) {
+  btn.addEventListener("click", async function () {
+    const id = btn.dataset.id;
+    const msg =
+      "确认撤下 #" + id + " 的现场照片？\n\n" +
+      "· 所有字节相同的已入库副本一并撤下（编号、坐标、备注保留）；\n" +
+      "· 撤照生效后，旧链接立即不再供图；\n" +
+      "· 此后补传的同字节照片（即使 UUID 不同）只收记录、不挂照片。";
+    if (!confirm(msg)) return;
+    btn.disabled = true;
+    try {
+      const resp = await fetch("/api/records/" + id + "/takedown", { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error(data.error || ("HTTP " + resp.status));
+      if (data.remaining_cleanup > 0) {
+        alert("撤照已生效。有 " + data.remaining_cleanup +
+              " 个文件暂时删除失败，已标记「待清理」，服务重启后继续删除。");
+      }
+      location.reload();
+    } catch (e) {
+      btn.disabled = false;
+      alert("撤照失败：" + e.message);
+    }
+  });
+});
+</script>
 </body>
 </html>

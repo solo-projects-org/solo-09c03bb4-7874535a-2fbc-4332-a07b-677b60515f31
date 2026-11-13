@@ -89,5 +89,32 @@ input, textarea {
 .records-table th { background: #e8efe0; }
 .empty { padding: 24px; text-align: center; color: #6b7a5e; }
 
+/* 撤照 */
+.photo-removed {
+  display: inline-block;
+  min-width: 84px;
+  padding: 10px 8px;
+  border-radius: 6px;
+  background: #f3e9e4;
+  color: #8a4b2d;
+  font-size: .78rem;
+  text-align: center;
+  line-height: 1.5;
+}
+.photo-removed.pending-cleanup { background: #fdf3e0; color: #9a6b1a; }
+
+.btn-takedown {
+  padding: 6px 12px;
+  border: 1px solid #c98a7a;
+  border-radius: 6px;
+  background: #fdf1ee;
+  color: #a03d2a;
+  font-size: .85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-takedown:hover { background: #f9e2dc; }
+.btn-takedown:disabled { opacity: .5; cursor: default; }
+
 .footer-link { text-align: center; margin: 18px 0 30px; font-size: .9rem; }
 .footer-link a { color: #2d5a27; }
